@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "milind1122/java_applicationdevopsproject"
+        DOCKER_IMAGE = "saikauthale/java_applicationdevopsproject"
         DOCKER_TAG = "${BUILD_NUMBER}"
         REGION = "ap-south-1"
         CLUSTER_NAME = "java-eks-cluster"
-        SONARQUBE_URL = "http://13.233.65.153:9000"
+        SONARQUBE_URL = "http://3.111.32.13:9000"
         SONAR_PROJECT_KEY = "java-app"
-        SONAR_TOKEN = credentials('sonar-token') // Store token securely in Jenkins credentials
+        SONAR_TOKEN = credentials('squ_9d48f2e55bce1296c648deefb818573476a7b2b7') // Store token securely in Jenkins credentials
     }
 
     stages {
