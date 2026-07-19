@@ -24,11 +24,8 @@ pipeline {
             environment {
                 SONAR_TOKEN = credentials('project')
             }
-
             steps {
                 script {
-                    sh 'mkdir -p .scannerwork'
-
                     docker.image('sonarsource/sonar-scanner-cli:latest').inside('--user root --entrypoint=""') {
                         sh '''
                         mkdir -p $WORKSPACE/.sonar
@@ -48,8 +45,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                rm -rf $WORKSPACE/.sonar || true
-                rm -rf $WORKSPACE/.scannerwork || true
+                sudo rm -rf $WORKSPACE/.sonar || true
+                sudo rm -rf $WORKSPACE/.scannerwork || true
 
                 docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
                 '''
@@ -76,9 +73,7 @@ pipeline {
             steps {
                 sh '''
                 docker push $DOCKER_IMAGE:$DOCKER_TAG
-
                 docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
-
                 docker push $DOCKER_IMAGE:latest
                 '''
             }
@@ -96,7 +91,7 @@ pipeline {
                     aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
 
                     kubectl set image deployment/java-war-deployment \
-                    java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
+                      java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
 
                     kubectl rollout status deployment/java-war-deployment
                     '''
@@ -107,11 +102,11 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment Successful 🚀'
+            echo "Deployment Successful 🚀"
         }
 
         failure {
-            echo 'Pipeline Failed ❌'
+            echo "Pipeline Failed ❌"
         }
 
         always {
@@ -119,5 +114,3 @@ pipeline {
         }
     }
 }
-
-                
