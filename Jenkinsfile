@@ -21,8 +21,8 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-    environment {
-    SONAR_TOKEN = credentials('sonarqube')
+   environment {
+    SONAR_TOKEN = credentials('squ_9d48f2e55bce1296c648deefb818573476a7b2b7')
 }
     steps {
         script {
