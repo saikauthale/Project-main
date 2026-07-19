@@ -26,7 +26,7 @@ pipeline {
                 sonar-scanner \
                 -Dsonar.projectKey=java-app \
                 -Dsonar.sources=. \
-                -Dsonar.host.url=http://13.233.65.153:9000 \
+                -Dsonar.host.url=http://13.233.139.215:9000 \
                 -Dsonar.token=$SONAR_TOKEN \
                 -Dsonar.userHome=$WORKSPACE/.sonar
                 '''
