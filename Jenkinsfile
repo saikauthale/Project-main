@@ -21,41 +21,41 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-  environment {
-    SONAR_TOKEN = credentials('project')
-}
-    steps {
-        script {
+            environment {
+                SONAR_TOKEN = credentials('project')
+            }
 
-            sh 'mkdir -p .scannerwork'
+            steps {
+                script {
+                    sh 'mkdir -p .scannerwork'
 
-            docker.image('sonarsource/sonar-scanner-cli:latest').inside(
-    '--user root --entrypoint=""'
-)
+                    docker.image('sonarsource/sonar-scanner-cli:latest').inside('--user root --entrypoint=""') {
+                        sh '''
+                        mkdir -p $WORKSPACE/.sonar
+
+                        sonar-scanner \
+                          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=$SONARQUBE_URL \
+                          -Dsonar.token=$SONAR_TOKEN \
+                          -Dsonar.userHome=$WORKSPACE/.sonar
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
                 sh '''
-                mkdir -p $WORKSPACE/.sonar
+                rm -rf $WORKSPACE/.sonar || true
+                rm -rf $WORKSPACE/.scannerwork || true
 
-                sonar-scanner \
-                  -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                  -Dsonar.sources=. \
-                  -Dsonar.host.url=$SONARQUBE_URL \
-                  -Dsonar.token=$SONAR_TOKEN \
-                  -Dsonar.userHome=$WORKSPACE/.sonar
+                docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
                 '''
             }
         }
-    }
-}
-        stage('Build Docker Image') {
-    steps {
-        sh '''
-        sudo rm -rf $WORKSPACE/.sonar || true
-        sudo rm -rf $WORKSPACE/.scannerwork || true
 
-        docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-        '''
-    }
-}
         stage('Docker Login') {
             steps {
                 withCredentials([
@@ -65,7 +65,6 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     '''
@@ -87,14 +86,12 @@ pipeline {
 
         stage('Deploy to AWS EKS') {
             steps {
-
                 withCredentials([
                     [
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: 'aws-credentials'
                     ]
                 ]) {
-
                     sh '''
                     aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
 
@@ -109,13 +106,12 @@ pipeline {
     }
 
     post {
-
         success {
-            echo "Deployment Successful 🚀"
+            echo 'Deployment Successful 🚀'
         }
 
         failure {
-            echo "Pipeline Failed ❌"
+            echo 'Pipeline Failed ❌'
         }
 
         always {
@@ -123,3 +119,5 @@ pipeline {
         }
     }
 }
+
+                
