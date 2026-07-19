@@ -30,9 +30,8 @@ pipeline {
             sh 'mkdir -p .scannerwork'
 
             docker.image('sonarsource/sonar-scanner-cli:latest').inside(
-                '-u root --entrypoint=""'
-            ) {
-
+    '--user root --entrypoint=""'
+)
                 sh '''
                 mkdir -p $WORKSPACE/.sonar
 
@@ -48,13 +47,15 @@ pipeline {
     }
 }
         stage('Build Docker Image') {
-            steps {
-                sh """
-                docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-                """
-            }
-        }
+    steps {
+        sh '''
+        sudo rm -rf $WORKSPACE/.sonar || true
+        sudo rm -rf $WORKSPACE/.scannerwork || true
 
+        docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+        '''
+    }
+}
         stage('Docker Login') {
             steps {
                 withCredentials([
