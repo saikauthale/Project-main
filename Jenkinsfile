@@ -4,52 +4,62 @@ pipeline {
     environment {
         DOCKER_IMAGE = "saikauthale/java_applicationdevopsproject"
         DOCKER_TAG = "${BUILD_NUMBER}"
+
         REGION = "ap-south-1"
         CLUSTER_NAME = "java-eks-cluster"
+
         SONARQUBE_URL = "http://13.233.139.215:9000"
         SONAR_PROJECT_KEY = "java-app"
-        SONAR_TOKEN = credentials('squ_9d48f2e55bce1296c648deefb818573476a7b2b7') // Store token securely in Jenkins credentials
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
                 checkout scm
             }
         }
 
-      stage('SonarQube Analysis') {
-    steps {
-        script {
-            docker.image('sonarsource/sonar-scanner-cli:latest').inside('--entrypoint=""') {
-                sh '''
-                sonar-scanner \
-                -Dsonar.projectKey=java-app \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=http://13.233.139.215:9000 \
-                -Dsonar.token=$SONAR_TOKEN \
-                -Dsonar.userHome=$WORKSPACE/.sonar
-                '''
+        stage('SonarQube Analysis') {
+            environment {
+                SONAR_TOKEN = credentials('squ_9d48f2e55bce1296c648deefb818573476a7b2b7')
+            }
+
+            steps {
+                script {
+                    docker.image('sonarsource/sonar-scanner-cli:latest').inside('--entrypoint=""') {
+                        sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONARQUBE_URL \
+                        -Dsonar.token=$SONAR_TOKEN
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
+                sh """
+                docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+                """
             }
         }
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-hub-cred',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-hub-cred',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+
                     sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     '''
                 }
             }
@@ -59,29 +69,49 @@ pipeline {
             steps {
                 sh '''
                 docker push $DOCKER_IMAGE:$DOCKER_TAG
+
                 docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
+
                 docker push $DOCKER_IMAGE:latest
                 '''
             }
         }
 
-        stage('Deploy to EKS') {
+        stage('Deploy to AWS EKS') {
             steps {
-                sh '''
-                aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
-                kubectl set image deployment/java-war-deployment \
-                java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
-                '''
+
+                withCredentials([
+                    [
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-credentials'
+                    ]
+                ]) {
+
+                    sh '''
+                    aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+
+                    kubectl set image deployment/java-war-deployment \
+                    java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
+
+                    kubectl rollout status deployment/java-war-deployment
+                    '''
+                }
             }
         }
     }
 
     post {
+
         success {
             echo "Deployment Successful 🚀"
         }
+
         failure {
             echo "Pipeline Failed ❌"
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
