@@ -21,25 +21,33 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_TOKEN = credentials('squ_9d48f2e55bce1296c648deefb818573476a7b2b7')
-            }
+    environment {
+        SONAR_TOKEN = credentials('sonarqube-token')
+    }
 
-            steps {
-                script {
-                    docker.image('sonarsource/sonar-scanner-cli:latest').inside('--entrypoint=""') {
-                        sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONARQUBE_URL \
-                        -Dsonar.token=$SONAR_TOKEN
-                        '''
-                    }
-                }
+    steps {
+        script {
+
+            sh 'mkdir -p .scannerwork'
+
+            docker.image('sonarsource/sonar-scanner-cli:latest').inside(
+                '-u root --entrypoint=""'
+            ) {
+
+                sh '''
+                mkdir -p $WORKSPACE/.sonar
+
+                sonar-scanner \
+                  -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                  -Dsonar.sources=. \
+                  -Dsonar.host.url=$SONARQUBE_URL \
+                  -Dsonar.token=$SONAR_TOKEN \
+                  -Dsonar.userHome=$WORKSPACE/.sonar
+                '''
             }
         }
-
+    }
+}
         stage('Build Docker Image') {
             steps {
                 sh """
