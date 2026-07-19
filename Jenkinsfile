@@ -31,6 +31,7 @@ pipeline {
                         sh '''
                         mkdir -p $WORKSPACE/.sonar
 
+<<<<<<< HEAD
                         sonar-scanner \
                           -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                           -Dsonar.sources=. \
@@ -38,6 +39,14 @@ pipeline {
                           -Dsonar.login=$SONAR_TOKEN
                           -Dsonar.userHome=$WORKSPACE/.sonar
                         '''
+=======
+                       sonar-scanner \
+-Dsonar.projectKey=java-app \
+-Dsonar.sources=. \
+-Dsonar.host.url=http://13.233.139.215:9000 \
+-Dsonar.login=$SONAR_TOKEN \
+-Dsonar.userHome=/var/lib/jenkins/workspace/project/.sonar
+>>>>>>> 1390df98ee77e3c80ddb509da9621325ec2e817c
                     }
                 }
             }
@@ -63,20 +72,20 @@ pipeline {
     }
 }
         stage('Docker Login') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'docker-hub-cred',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    '''
-                }
-            }
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'docker-hub-cred',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )
+        ]) {
+            sh '''
+                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            '''
         }
+    }
+}
 
         stage('Push Docker Image') {
             steps {
