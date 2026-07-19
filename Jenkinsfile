@@ -35,7 +35,7 @@ pipeline {
                           -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                           -Dsonar.sources=. \
                           -Dsonar.host.url=$SONARQUBE_URL \
-                          -Dsonar.token=$SONAR_TOKEN \
+                          -Dsonar.login=$SONAR_TOKEN
                           -Dsonar.userHome=$WORKSPACE/.sonar
                         '''
                     }
