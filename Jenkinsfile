@@ -31,13 +31,12 @@ pipeline {
                         sh '''
                         mkdir -p $WORKSPACE/.sonar
 
-                        sonar-scanner \
-                          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONARQUBE_URL \
-                          -Dsonar.login=$SONAR_TOKEN
-                          -Dsonar.userHome=$WORKSPACE/.sonar
-                        '''
+                       sonar-scanner \
+-Dsonar.projectKey=java-app \
+-Dsonar.sources=. \
+-Dsonar.host.url=http://13.233.139.215:9000 \
+-Dsonar.login=$SONAR_TOKEN \
+-Dsonar.userHome=/var/lib/jenkins/workspace/project/.sonar
                     }
                 }
             }
