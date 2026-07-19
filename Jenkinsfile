@@ -24,6 +24,7 @@ pipeline {
             environment {
                 SONAR_TOKEN = credentials('project')
             }
+
             steps {
                 script {
                     docker.image('sonarsource/sonar-scanner-cli:latest').inside('--user root --entrypoint=""') {
@@ -42,12 +43,18 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Clean Sonar Files') {
             steps {
                 sh '''
                 sudo rm -rf $WORKSPACE/.sonar || true
                 sudo rm -rf $WORKSPACE/.scannerwork || true
+                '''
+            }
+        }
 
+        stage('Build Docker Image') {
+            steps {
+                sh '''
                 docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
                 '''
             }
