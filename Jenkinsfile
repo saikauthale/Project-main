@@ -53,13 +53,15 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            steps {
-                sh '''
-                docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-                '''
-            }
-        }
+    steps {
+        sh '''
+        rm -rf $WORKSPACE/.sonar || true
+        rm -rf $WORKSPACE/.scannerwork || true
 
+        docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+        '''
+    }
+}
         stage('Docker Login') {
             steps {
                 withCredentials([
