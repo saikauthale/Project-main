@@ -47,8 +47,8 @@ pipeline {
             steps {
                 sh '''
                     sudo chown -R jenkins:jenkins $WORKSPACE || true
-                    sudo rm -rf $WORKSPACE/.sonar || true
-                    sudo rm -rf $WORKSPACE/.scannerwork || true
+                     rm -rf $WORKSPACE/.sonar || true
+                     rm -rf $WORKSPACE/.scannerwork || true
                 '''
             }
         }
