@@ -6,7 +6,7 @@ pipeline {
         DOCKER_TAG = "${BUILD_NUMBER}"
 
         REGION = "ap-south-1"
-        CLUSTER_NAME = "java-eks-cluster"
+        CLUSTER_NAME = "hilarious-electro-hideout"
 
         SONARQUBE_URL = "http://13.204.64.103:9000"
         SONAR_PROJECT_KEY = "java-app"
@@ -46,8 +46,9 @@ pipeline {
         stage('Clean Sonar Files') {
             steps {
                 sh '''
-                    rm -rf $WORKSPACE/.sonar || true
-                    rm -rf $WORKSPACE/.scannerwork || true
+                    sudo chown -R jenkins:jenkins $WORKSPACE || true
+                    sudo rm -rf $WORKSPACE/.sonar || true
+                    sudo rm -rf $WORKSPACE/.scannerwork || true
                 '''
             }
         }
@@ -98,13 +99,24 @@ pipeline {
                 ]) {
                     sh '''
                         aws eks update-kubeconfig \
-        --region ap-south-1 \
-        --name hilarious-electro-hideout
+                          --region $REGION \
+                          --name $CLUSTER_NAME
+
+                        echo "========== Cluster =========="
+                        kubectl config current-context
+
+                        echo "========== Nodes =========="
+                        kubectl get nodes
+
+                        echo "========== Deployments =========="
+                        kubectl get deployment
 
                         kubectl set image deployment/java-war-deployment \
-                            java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
+                          java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
 
                         kubectl rollout status deployment/java-war-deployment
+
+                        kubectl get pods
                     '''
                 }
             }
@@ -112,16 +124,22 @@ pipeline {
     }
 
     post {
+
         success {
-            echo '✅ Deployment Successful'
+            echo "✅ Deployment Successful"
         }
 
         failure {
-            echo '❌ Pipeline Failed'
+            echo "❌ Pipeline Failed"
         }
 
         always {
+            sh '''
+                docker logout || true
+                sudo rm -rf $WORKSPACE/.sonar || true
+                sudo rm -rf $WORKSPACE/.scannerwork || true
+            '''
             cleanWs()
         }
     }
-}
+}            
