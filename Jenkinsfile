@@ -6,7 +6,7 @@ pipeline {
         DOCKER_TAG = "${BUILD_NUMBER}"
 
         REGION = "ap-south-1"
-        CLUSTER_NAME = "hilarious-electro-hideout"
+        CLUSTER_NAME = "devops-cluster"
 
         SONARQUBE_URL = "http://13.204.64.103:9000"
         SONAR_PROJECT_KEY = "java-app"
@@ -46,9 +46,8 @@ pipeline {
         stage('Clean Sonar Files') {
             steps {
                 sh '''
-                    sudo chown -R jenkins:jenkins $WORKSPACE || true
-                     rm -rf $WORKSPACE/.sonar || true
-                     rm -rf $WORKSPACE/.scannerwork || true
+                    rm -rf $WORKSPACE/.sonar || true
+                    rm -rf $WORKSPACE/.scannerwork || true
                 '''
             }
         }
@@ -81,9 +80,7 @@ pipeline {
             steps {
                 sh '''
                     docker push $DOCKER_IMAGE:$DOCKER_TAG
-
                     docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
-
                     docker push $DOCKER_IMAGE:latest
                 '''
             }
@@ -102,21 +99,25 @@ pipeline {
                           --region $REGION \
                           --name $CLUSTER_NAME
 
-                        echo "========== Cluster =========="
+                        echo "========== Current Context =========="
                         kubectl config current-context
 
                         echo "========== Nodes =========="
                         kubectl get nodes
 
                         echo "========== Deployments =========="
-                        kubectl get deployment
+                        kubectl get deployments
 
                         kubectl set image deployment/springboot-app \
-springboot-app=saikauthale/java_applicationdevopsproject:${BUILD_NUMBER}
+                        springboot-app=$DOCKER_IMAGE:$DOCKER_TAG
 
-kubectl rollout status deployment/springboot-app
+                        kubectl rollout status deployment/springboot-app
 
+                        echo "========== Pods =========="
                         kubectl get pods
+
+                        echo "========== Services =========="
+                        kubectl get svc
                     '''
                 }
             }
@@ -136,10 +137,10 @@ kubectl rollout status deployment/springboot-app
         always {
             sh '''
                 docker logout || true
-                sudo rm -rf $WORKSPACE/.sonar || true
-                sudo rm -rf $WORKSPACE/.scannerwork || true
+                rm -rf $WORKSPACE/.sonar || true
+                rm -rf $WORKSPACE/.scannerwork || true
             '''
             cleanWs()
         }
     }
-}            
+}
