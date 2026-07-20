@@ -8,7 +8,7 @@ pipeline {
         REGION = "ap-south-1"
         CLUSTER_NAME = "java-eks-cluster"
 
-        SONARQUBE_URL = "http://13.204.64.103:9000""
+        SONARQUBE_URL = "http://13.204.64.103:9000"
         SONAR_PROJECT_KEY = "java-app"
     }
 
