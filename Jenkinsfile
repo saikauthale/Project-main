@@ -98,8 +98,8 @@ pipeline {
                 ]) {
                     sh '''
                         aws eks update-kubeconfig \
-                            --region $REGION \
-                            --name $CLUSTER_NAME
+        --region ap-south-1 \
+        --name hilarious-electro-hideout
 
                         kubectl set image deployment/java-war-deployment \
                             java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
