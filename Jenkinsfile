@@ -111,8 +111,8 @@ pipeline {
                         echo "========== Deployments =========="
                         kubectl get deployment
 
-                        kubectl set image deployment/java-war-deployment \
-                          java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
+                        kubectl set image deployment/springboot-app \
+springboot=saikauthale/java_applicationdevopsproject:${BUILD_NUMBER}
 
                         kubectl rollout status deployment/java-war-deployment
 
