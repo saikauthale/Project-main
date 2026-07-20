@@ -31,7 +31,7 @@ pipeline {
                         sh '''
                         mkdir -p $WORKSPACE/.sonar
 
-<<<<<<< HEAD
+HEAD
                         sonar-scanner \
                           -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                           -Dsonar.sources=. \
@@ -39,7 +39,7 @@ pipeline {
                           -Dsonar.login=$SONAR_TOKEN
                           -Dsonar.userHome=$WORKSPACE/.sonar
                         '''
-=======
+                        
                        sonar-scanner \
 -Dsonar.projectKey=java-app \
 -Dsonar.sources=. \
