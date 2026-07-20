@@ -22,7 +22,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             environment {
-                SONAR_TOKEN = credentials('project')
+                SONAR_TOKEN = credentials('sonar-token')
             }
 
             steps {
