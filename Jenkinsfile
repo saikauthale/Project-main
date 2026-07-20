@@ -112,9 +112,9 @@ pipeline {
                         kubectl get deployment
 
                         kubectl set image deployment/springboot-app \
-springboot=saikauthale/java_applicationdevopsproject:${BUILD_NUMBER}
+springboot-app=saikauthale/java_applicationdevopsproject:${BUILD_NUMBER}
 
-                        kubectl rollout status deployment/java-war-deployment
+kubectl rollout status deployment/springboot-app
 
                         kubectl get pods
                     '''
