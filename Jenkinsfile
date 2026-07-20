@@ -29,24 +29,15 @@ pipeline {
                 script {
                     docker.image('sonarsource/sonar-scanner-cli:latest').inside('--user root --entrypoint=""') {
                         sh '''
-                        mkdir -p $WORKSPACE/.sonar
+                            mkdir -p $WORKSPACE/.sonar
 
-HEAD
-                        sonar-scanner \
-                          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONARQUBE_URL \
-                          -Dsonar.login=$SONAR_TOKEN
-                          -Dsonar.userHome=$WORKSPACE/.sonar
+                            sonar-scanner \
+                              -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                              -Dsonar.sources=. \
+                              -Dsonar.host.url=$SONARQUBE_URL \
+                              -Dsonar.login=$SONAR_TOKEN \
+                              -Dsonar.userHome=$WORKSPACE/.sonar
                         '''
-                        
-                       sonar-scanner \
--Dsonar.projectKey=java-app \
--Dsonar.sources=. \
--Dsonar.host.url=http://13.233.139.215:9000 \
--Dsonar.login=$SONAR_TOKEN \
--Dsonar.userHome=/var/lib/jenkins/workspace/project/.sonar
->>>>>>> 1390df98ee77e3c80ddb509da9621325ec2e817c
                     }
                 }
             }
@@ -55,44 +46,44 @@ HEAD
         stage('Clean Sonar Files') {
             steps {
                 sh '''
-                sudo rm -rf $WORKSPACE/.sonar || true
-                sudo rm -rf $WORKSPACE/.scannerwork || true
+                    rm -rf $WORKSPACE/.sonar || true
+                    rm -rf $WORKSPACE/.scannerwork || true
                 '''
             }
         }
 
         stage('Build Docker Image') {
-    steps {
-        sh '''
-        rm -rf $WORKSPACE/.sonar || true
-        rm -rf $WORKSPACE/.scannerwork || true
-
-        docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-        '''
-    }
-}
-        stage('Docker Login') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'docker-hub-cred',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )
-        ]) {
-            sh '''
-                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            '''
+            steps {
+                sh '''
+                    docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+                '''
+            }
         }
-    }
-}
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-hub-cred',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    '''
+                }
+            }
+        }
 
         stage('Push Docker Image') {
             steps {
                 sh '''
-                docker push $DOCKER_IMAGE:$DOCKER_TAG
-                docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
-                docker push $DOCKER_IMAGE:latest
+                    docker push $DOCKER_IMAGE:$DOCKER_TAG
+
+                    docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
+
+                    docker push $DOCKER_IMAGE:latest
                 '''
             }
         }
@@ -106,12 +97,14 @@ HEAD
                     ]
                 ]) {
                     sh '''
-                    aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
+                        aws eks update-kubeconfig \
+                            --region $REGION \
+                            --name $CLUSTER_NAME
 
-                    kubectl set image deployment/java-war-deployment \
-                      java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
+                        kubectl set image deployment/java-war-deployment \
+                            java-war-container=$DOCKER_IMAGE:$DOCKER_TAG
 
-                    kubectl rollout status deployment/java-war-deployment
+                        kubectl rollout status deployment/java-war-deployment
                     '''
                 }
             }
@@ -120,11 +113,11 @@ HEAD
 
     post {
         success {
-            echo "Deployment Successful 🚀"
+            echo '✅ Deployment Successful'
         }
 
         failure {
-            echo "Pipeline Failed ❌"
+            echo '❌ Pipeline Failed'
         }
 
         always {
